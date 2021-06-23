@@ -8,8 +8,8 @@
               v-for="item1 in ItemTask1"
               :key="item1"
               :item1="item1"
-              :class="[item1.selected ? 'is-completed' : '']"
-              @change-selected="Changeselected"
+              :class="item1.selected ? 'is-completed' : ''"
+              @change-selected="changeSelected"
             >
             </Task1>
           </b-card>
@@ -17,10 +17,10 @@
       </b-col>
 
       <b-col>
-        <b-col><input type="submit" value=">" @click="MoveItemRight" /></b-col>
-        <b-col><input type="submit" value="<" @click="MoveItemLeft" /></b-col>
-        <b-col><input type="submit" value=">>"  /></b-col>
-        <b-col><input type="submit" value="<<" /></b-col>
+        <b-col><input type="submit" value="^" @click="moveUp" /></b-col>
+        <b-col><input type="submit" value="v" @click="moveDown" /></b-col>
+        <b-col><input type="submit" value=">" @click="moveRight" /></b-col>
+        <b-col><input type="submit" value="<" @click="moveLeft" /></b-col>
       </b-col>
 
       <b-col>
@@ -30,8 +30,8 @@
               v-for="item2 in ItemTask2"
               :key="item2"
               :item2="item2"
-              :class="[item2.selected ? 'is-completed' : '']"
-              @change-selected-2="Changeselected2"
+              :class="item2.selected ? 'is-completed' : ''"
+              @change-selected-2="changeSelected2"
             >
             </Task2>
           </b-card>
@@ -49,11 +49,11 @@ export default {
     Task1,
     Task2,
   },
-  props:{
-     listTask1: Array,
-     listTask2: Array,
-     listItemSelected: Array,
-
+  props: {
+    list: Array,
+    listTask1: Array,
+    listTask2: Array,
+    listItemSelected: Array
   },
   data() {
     return {
@@ -129,66 +129,72 @@ export default {
     };
   },
   methods: {
-    Changeselected(item1) {
+    changeSelected(item1) {
       const itemIndex = this.ItemTask1.indexOf(item1);
       this.ItemTask1[itemIndex].selected = !this.ItemTask1[itemIndex].selected;
     },
-    Changeselected2(item2) {
+    changeSelected2(item2) {
       const itemIndex = this.ItemTask2.indexOf(item2);
       this.ItemTask2[itemIndex].selected = !this.ItemTask2[itemIndex].selected;
     },
 
-    MoveItemRight() {
-       var itemSelected = this.ItemTask1.filter(function (u) {
+    moveRight() {
+      var itemSelected = this.ItemTask1.filter(function (u) {
         return u.selected;
       });
-     console.log(itemSelected);
-      let i = 0;
-      let j = 0;
-      for (i; i < this.ItemTask1.length; i++) {
-        for (j; j < itemSelected.length; j++) {
-          if (itemSelected[j].id === this.ItemTask1[i].id) {
-            this.ItemTask1.splice(this.ItemTask1[i], 1);
-            this.ItemTask2.push(itemSelected[j]);
-          }
-        }
-      }
-      //this.ItemMove(this.ItemTask1,itemSelected,this.ItemTask2)
+      this.ItemTask2 = this.ItemTask2.concat(itemSelected);
+      this.ItemTask2 = this.ItemTask2.map((obj) => {
+        return {
+          ...obj,
+          selected: false,
+        };
+      });
+      this.ItemTask1 = this.ItemTask1.filter((item) => {
+        return !item.selected;
+      });
     },
-    MoveItemLeft() {
-       var itemSelected = this.ItemTask2.filter(function (u) {
+    moveLeft() {
+      var itemSelected = this.ItemTask2.filter(function (u) {
         return u.selected;
       });
-     console.log(itemSelected);
-      let i = 0;
-      let j = 0;
-      for (i; i < this.ItemTask2.length; i++) {
-        for (j; j < itemSelected.length; j++) {
-          if (itemSelected[j].id === this.ItemTask2[i].id) {
-            this.ItemTask2.splice(this.ItemTask2[i], 1);
-            this.ItemTask1.push(itemSelected[j]);
-          }
-        }
-      }
-      //this.ItemMove(this.ItemTask1,itemSelected,this.ItemTask2)
+      this.ItemTask1 = this.ItemTask1.concat(itemSelected);
+      this.ItemTask1 = this.ItemTask1.map((obj) => {
+        return {
+          ...obj,
+          selected: false,
+        };
+      });
+      this.ItemTask2 = this.ItemTask2.filter((item) => {
+        return !item.selected;
+      });
+    },
+    moveUp() {
+      this.up(this.ItemTask1);  
     },
     
-
-    // method dùng chung
-    ItemMove(listTask1,listItemSelected,listTask2 ) {      
-      let i = 0;
-      let j = 0;
-      for (i; i < listTask1.length; i++) {
-        for (j; j < listItemSelected.length; j++) {
-          if (listItemSelected[j].id === this.listTask1[i].id) {
-            listTask1.splice(this.listTask1[i], 1);
-            listTask2.push(listItemSelected[j]);
-          }
-        }
-      }
+    moveDown() {
+     this.down(this.ItemTask1)
     },
 
-    
+    //method
+    up(list){
+      let temp =0
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].selected === true && (i-1) >= 0) {
+          temp = i;
+        }
+      }
+      list.splice(temp - 1, 0, list.splice(temp, 1)[0]);
+    },
+    down(list){
+      let temp =0
+      for (let i = 0; i <= list.length; i++) {
+        if (list[i].selected === true) {
+          temp = i;
+        }
+      }
+      list.splice(temp + 1, 0, list.splice(temp, 1)[0]);
+    },
   },
 };
 </script>
@@ -199,7 +205,7 @@ export default {
   background-color: rgb(219, 214, 214);
 }
 .input[type="button"],
-input[type="submit"]{
+input[type="submit"] {
   background-color: #349dd0;
   border: none;
   color: white;
@@ -208,7 +214,7 @@ input[type="submit"]{
   margin: 4px 2px;
   cursor: pointer;
 }
-.input[type="submit"]:hover{
+.input[type="submit"]:hover {
   background-color: rgb(33, 209, 42);
 }
 </style>
